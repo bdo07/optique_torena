@@ -98,11 +98,14 @@ class PublicController extends Controller
             $query->where('frame_shape', strtolower($request->query('shape')));
         }
 
+        $driver = \DB::getDriverName();
+        $likeOp = $driver === 'pgsql' ? 'ILIKE' : 'like';
+
         // Filter by color (json search)
         if ($request->filled('color')) {
             $color = strtolower($request->query('color'));
-            $query->where(function ($q) use ($color) {
-                $q->where('colors', 'like', "%{$color}%");
+            $query->where(function ($q) use ($color, $likeOp) {
+                $q->where('colors', $likeOp, "%{$color}%");
             });
         }
 
@@ -136,12 +139,12 @@ class PublicController extends Controller
         // Search query
         if ($request->filled('search')) {
             $search = trim($request->query('search'));
-            $query->where(function ($q) use ($search) {
-                $q->where('name_fr', 'like', "%{$search}%")
-                  ->orWhere('name_ar', 'like', "%{$search}%")
-                  ->orWhere('reference', 'like', "%{$search}%")
-                  ->orWhere('description_fr', 'like', "%{$search}%")
-                  ->orWhere('description_ar', 'like', "%{$search}%");
+            $query->where(function ($q) use ($search, $likeOp) {
+                $q->where('name_fr', $likeOp, "%{$search}%")
+                  ->orWhere('name_ar', $likeOp, "%{$search}%")
+                  ->orWhere('reference', $likeOp, "%{$search}%")
+                  ->orWhere('description_fr', $likeOp, "%{$search}%")
+                  ->orWhere('description_ar', $likeOp, "%{$search}%");
             });
         }
 

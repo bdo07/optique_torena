@@ -21,10 +21,12 @@ class ProductController extends Controller
 
         if ($request->filled('search')) {
             $search = trim($request->query('search'));
-            $query->where(function ($q) use ($search) {
-                $q->where('name_fr', 'like', "%{$search}%")
-                  ->orWhere('name_ar', 'like', "%{$search}%")
-                  ->orWhere('reference', 'like', "%{$search}%");
+            $driver = \DB::getDriverName();
+            $likeOp = $driver === 'pgsql' ? 'ILIKE' : 'like';
+            $query->where(function ($q) use ($search, $likeOp) {
+                $q->where('name_fr', $likeOp, "%{$search}%")
+                  ->orWhere('name_ar', $likeOp, "%{$search}%")
+                  ->orWhere('reference', $likeOp, "%{$search}%");
             });
         }
 
@@ -60,6 +62,21 @@ class ProductController extends Controller
      */
     public function store(Request $request): JsonResponse
     {
+        if ($request->has('specifications') && is_string($request->specifications)) {
+            $decoded = json_decode($request->specifications, true);
+            if (json_last_error() === JSON_ERROR_NONE) {
+                $request->merge(['specifications' => $decoded]);
+            }
+        }
+        if ($request->has('colors') && is_string($request->colors)) {
+            $decoded = json_decode($request->colors, true);
+            if (json_last_error() === JSON_ERROR_NONE) {
+                $request->merge(['colors' => $decoded]);
+            } else {
+                $request->merge(['colors' => array_values(array_filter(array_map('trim', explode(',', $request->colors))))]);
+            }
+        }
+
         $validated = $request->validate([
             'name_fr' => 'required|string|max:200',
             'name_ar' => 'required|string|max:200',
@@ -136,6 +153,21 @@ class ProductController extends Controller
     public function update(Request $request, int $id): JsonResponse
     {
         $product = Product::findOrFail($id);
+
+        if ($request->has('specifications') && is_string($request->specifications)) {
+            $decoded = json_decode($request->specifications, true);
+            if (json_last_error() === JSON_ERROR_NONE) {
+                $request->merge(['specifications' => $decoded]);
+            }
+        }
+        if ($request->has('colors') && is_string($request->colors)) {
+            $decoded = json_decode($request->colors, true);
+            if (json_last_error() === JSON_ERROR_NONE) {
+                $request->merge(['colors' => $decoded]);
+            } else {
+                $request->merge(['colors' => array_values(array_filter(array_map('trim', explode(',', $request->colors))))]);
+            }
+        }
 
         $validated = $request->validate([
             'name_fr' => 'required|string|max:200',

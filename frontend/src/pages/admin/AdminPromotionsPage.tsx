@@ -198,7 +198,8 @@ export const AdminPromotionsPage: React.FC = () => {
                 <tr>
                   <th className="py-3 px-4 text-start">{t('admin.image')}</th>
                   <th className="py-3 px-4 text-start">Titre (Français / العربية)</th>
-                  <th className="py-3 px-4 text-start">Remise</th>
+                  <th className="py-3 px-4 text-start">Remise / Prix</th>
+                  <th className="py-3 px-4 text-start">Période</th>
                   <th className="py-3 px-4 text-start">Lien CTA</th>
                   <th className="py-3 px-4 text-start">{t('admin.status')}</th>
                   <th className="py-3 px-4 text-end">{t('admin.actions')}</th>
@@ -229,7 +230,22 @@ export const AdminPromotionsPage: React.FC = () => {
                       </span>
                     </td>
                     <td className="py-3 px-4 font-semibold text-amber-700">
-                      {p.discount_percentage ? `-${p.discount_percentage}%` : '—'}
+                      {p.discount_percentage ? `-${p.discount_percentage}%` : ''}
+                      {p.promotional_price ? (
+                        <span className="block text-dark-charcoal text-[11px] font-medium">
+                          {p.promotional_price} MAD
+                        </span>
+                      ) : null}
+                      {!p.discount_percentage && !p.promotional_price && '—'}
+                    </td>
+                    <td className="py-3 px-4 text-muted-gray text-[11px]">
+                      {p.start_date || p.end_date ? (
+                        <span>
+                          {p.start_date || '...'} → {p.end_date || '...'}
+                        </span>
+                      ) : (
+                        'Permanente'
+                      )}
                     </td>
                     <td className="py-3 px-4 text-muted-gray font-mono text-[11px]">
                       {p.cta_link || '—'}
@@ -372,16 +388,55 @@ export const AdminPromotionsPage: React.FC = () => {
                 </div>
                 <div>
                   <label className="block font-medium text-dark-charcoal mb-1">
-                    Lien CTA
+                    Prix promotionnel fixe (MAD)
                   </label>
                   <input
-                    type="text"
-                    value={formData.cta_link}
-                    onChange={(e) => setFormData({ ...formData, cta_link: e.target.value })}
-                    placeholder="/catalogue"
+                    type="number"
+                    step="0.01"
+                    value={formData.promotional_price}
+                    onChange={(e) => setFormData({ ...formData, promotional_price: e.target.value })}
+                    placeholder="ex: 790"
                     className="w-full px-3 py-1.5 border border-gray-200 rounded"
                   />
                 </div>
+              </div>
+
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="block font-medium text-dark-charcoal mb-1">
+                    Date de début
+                  </label>
+                  <input
+                    type="date"
+                    value={formData.start_date}
+                    onChange={(e) => setFormData({ ...formData, start_date: e.target.value })}
+                    className="w-full px-3 py-1.5 border border-gray-200 rounded bg-white"
+                  />
+                </div>
+                <div>
+                  <label className="block font-medium text-dark-charcoal mb-1">
+                    Date de fin
+                  </label>
+                  <input
+                    type="date"
+                    value={formData.end_date}
+                    onChange={(e) => setFormData({ ...formData, end_date: e.target.value })}
+                    className="w-full px-3 py-1.5 border border-gray-200 rounded bg-white"
+                  />
+                </div>
+              </div>
+
+              <div>
+                <label className="block font-medium text-dark-charcoal mb-1">
+                  Lien CTA
+                </label>
+                <input
+                  type="text"
+                  value={formData.cta_link}
+                  onChange={(e) => setFormData({ ...formData, cta_link: e.target.value })}
+                  placeholder="/catalogue"
+                  className="w-full px-3 py-1.5 border border-gray-200 rounded"
+                />
               </div>
 
               <div>

@@ -14,6 +14,13 @@
     font-family: 'Cairo', 'Tajawal', system-ui, -apple-system, sans-serif;
   }
 
+  [dir="rtl"] input,
+  [dir="rtl"] select,
+  [dir="rtl"] textarea,
+  [dir="rtl"] button {
+    font-family: 'Cairo', 'Tajawal', system-ui, -apple-system, sans-serif;
+  }
+
   body {
     background-color: #FAFAF8;
     color: #222222;

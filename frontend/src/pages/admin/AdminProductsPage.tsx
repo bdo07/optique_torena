@@ -12,6 +12,7 @@ import {
   Upload,
   Star,
   Check,
+  ExternalLink,
 } from 'lucide-react';
 import {
   createAdminProduct,
@@ -71,6 +72,11 @@ export const AdminProductsPage: React.FC = () => {
     is_featured: false,
     is_new: false,
     is_best_seller: false,
+    spec_material: '',
+    spec_lens: '',
+    spec_dimensions: '',
+    spec_weight: '',
+    spec_origin: '',
     image_url_1: '',
     image_url_2: '',
   });
@@ -129,6 +135,11 @@ export const AdminProductsPage: React.FC = () => {
       is_featured: false,
       is_new: true,
       is_best_seller: false,
+      spec_material: "Acétate d'Italie & Titane",
+      spec_lens: 'Verres de présentation (compatibles toutes corrections)',
+      spec_dimensions: '51 □ 19 - 145 mm',
+      spec_weight: '24 g',
+      spec_origin: 'Italie',
       image_url_1: '',
       image_url_2: '',
     });
@@ -155,6 +166,11 @@ export const AdminProductsPage: React.FC = () => {
       is_featured: p.is_featured,
       is_new: p.is_new,
       is_best_seller: p.is_best_seller,
+      spec_material: p.specifications?.material || '',
+      spec_lens: p.specifications?.lens || '',
+      spec_dimensions: p.specifications?.dimensions || '',
+      spec_weight: p.specifications?.weight || '',
+      spec_origin: p.specifications?.origin || '',
       image_url_1: '',
       image_url_2: '',
     });
@@ -183,6 +199,15 @@ export const AdminProductsPage: React.FC = () => {
       payload.append('is_featured', formData.is_featured ? '1' : '0');
       payload.append('is_new', formData.is_new ? '1' : '0');
       payload.append('is_best_seller', formData.is_best_seller ? '1' : '0');
+
+      // Specifications
+      const specs: Record<string, string> = {};
+      if (formData.spec_material) specs.material = formData.spec_material;
+      if (formData.spec_lens) specs.lens = formData.spec_lens;
+      if (formData.spec_dimensions) specs.dimensions = formData.spec_dimensions;
+      if (formData.spec_weight) specs.weight = formData.spec_weight;
+      if (formData.spec_origin) specs.origin = formData.spec_origin;
+      payload.append('specifications', JSON.stringify(specs));
 
       // Colors array
       const colorsArr = formData.colors
@@ -436,6 +461,15 @@ export const AdminProductsPage: React.FC = () => {
                       </td>
                       <td className="py-3 px-4 text-end">
                         <div className="inline-flex items-center gap-1.5">
+                          <a
+                            href={`/produit/${p.slug}`}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            title="Aperçu sur le site public"
+                            className="p-1.5 text-muted-gray hover:text-olive hover:bg-olive/10 rounded"
+                          >
+                            <ExternalLink className="w-4 h-4" />
+                          </a>
                           <button
                             onClick={() => openGalleryModal(p)}
                             title="Gérer la galerie photos"
@@ -680,6 +714,64 @@ export const AdminProductsPage: React.FC = () => {
                     onChange={(e) => setFormData({ ...formData, description_ar: e.target.value })}
                     className="w-full px-3 py-2 border border-gray-200 rounded focus:outline-none focus:border-olive font-arabic"
                   />
+                </div>
+              </div>
+
+              {/* Caractéristiques techniques / Specifications */}
+              <div className="p-4 bg-soft-beige/50 rounded border border-gray-200/80 space-y-3">
+                <label className="block font-semibold text-dark-charcoal">
+                  Caractéristiques techniques & Spécifications
+                </label>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  <div>
+                    <label className="block text-[11px] text-muted-gray mb-1">Matériau de la monture</label>
+                    <input
+                      type="text"
+                      placeholder="Ex: Acétate d'Italie, Titane"
+                      value={formData.spec_material}
+                      onChange={(e) => setFormData({ ...formData, spec_material: e.target.value })}
+                      className="w-full px-2.5 py-1.5 text-xs border border-gray-200 rounded bg-white"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-[11px] text-muted-gray mb-1">Type de verres</label>
+                    <input
+                      type="text"
+                      placeholder="Ex: Minéraux teintés catégorie 3"
+                      value={formData.spec_lens}
+                      onChange={(e) => setFormData({ ...formData, spec_lens: e.target.value })}
+                      className="w-full px-2.5 py-1.5 text-xs border border-gray-200 rounded bg-white"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-[11px] text-muted-gray mb-1">Dimensions (Calibre □ Pont - Branches)</label>
+                    <input
+                      type="text"
+                      placeholder="Ex: 51 □ 19 - 145 mm"
+                      value={formData.spec_dimensions}
+                      onChange={(e) => setFormData({ ...formData, spec_dimensions: e.target.value })}
+                      className="w-full px-2.5 py-1.5 text-xs border border-gray-200 rounded bg-white"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-[11px] text-muted-gray mb-1">Poids & Origine</label>
+                    <div className="grid grid-cols-2 gap-2">
+                      <input
+                        type="text"
+                        placeholder="Ex: 24 g"
+                        value={formData.spec_weight}
+                        onChange={(e) => setFormData({ ...formData, spec_weight: e.target.value })}
+                        className="w-full px-2.5 py-1.5 text-xs border border-gray-200 rounded bg-white"
+                      />
+                      <input
+                        type="text"
+                        placeholder="Ex: Italie"
+                        value={formData.spec_origin}
+                        onChange={(e) => setFormData({ ...formData, spec_origin: e.target.value })}
+                        className="w-full px-2.5 py-1.5 text-xs border border-gray-200 rounded bg-white"
+                      />
+                    </div>
+                  </div>
                 </div>
               </div>
 

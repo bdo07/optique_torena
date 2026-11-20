@@ -39,6 +39,8 @@ export const FilterSidebar: React.FC<FilterSidebarProps> = ({
     { value: 'rectangle', label: t('catalog.shape_rectangle') },
     { value: 'aviateur', label: t('catalog.shape_aviateur') },
     { value: 'cat-eye', label: t('catalog.shape_cat_eye') },
+    { value: 'pantoo', label: t('catalog.shape_pantoo') },
+    { value: 'geometrique', label: t('catalog.shape_geometrique') },
   ];
 
   const popularColors = [

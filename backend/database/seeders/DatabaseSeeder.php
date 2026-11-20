@@ -514,6 +514,22 @@ class DatabaseSeeder extends Seeder
                 'description' => 'Slogan / الشعار',
             ],
             [
+                'key' => 'shop_logo',
+                'value_fr' => null,
+                'value_ar' => null,
+                'group' => 'general',
+                'type' => 'image',
+                'description' => 'Logo de la boutique / شعار المتجر',
+            ],
+            [
+                'key' => 'shop_favicon',
+                'value_fr' => null,
+                'value_ar' => null,
+                'group' => 'general',
+                'type' => 'image',
+                'description' => 'Favicon du site / أيقونة الموقع',
+            ],
+            [
                 'key' => 'phone',
                 'value_fr' => '+212 5 22 20 30 40',
                 'value_ar' => '+212 5 22 20 30 40',
@@ -634,6 +650,14 @@ class DatabaseSeeder extends Seeder
                 'group' => 'announcement',
                 'type' => 'color',
                 'description' => 'Couleur du texte / لون النص',
+            ],
+            [
+                'key' => 'announcement_expires_at',
+                'value_fr' => null,
+                'value_ar' => null,
+                'group' => 'announcement',
+                'type' => 'date',
+                'description' => 'Date d\'expiration de l\'annonce / تاريخ انتهاء الإعلان',
             ],
 
             // Hero Section

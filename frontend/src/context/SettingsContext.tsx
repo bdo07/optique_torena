@@ -14,6 +14,7 @@ interface SettingsContextType {
     link: string;
     bgColor: string;
     textColor: string;
+    expiresAt?: string;
   };
   contactInfo: {
     phone: string;
@@ -25,6 +26,12 @@ interface SettingsContextType {
     googleMapsUrl: string;
     instagramUrl: string;
     facebookUrl: string;
+  };
+  branding: {
+    shopName: string;
+    shopTagline: string;
+    shopLogo: string;
+    shopFavicon: string;
   };
   reloadSettings: () => Promise<void>;
 }
@@ -61,13 +68,22 @@ export const SettingsProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     return item.value_fr || item.value_ar || defaultValue;
   };
 
+  const announcementExpiresAt = getSetting('announcement_expires_at');
+  const isAnnouncementExpired = announcementExpiresAt
+    ? new Date(announcementExpiresAt + 'T23:59:59') < new Date()
+    : false;
+
   const announcement = {
-    enabled: getSetting('announcement_enabled', '1') === '1',
+    enabled:
+      (getSetting('announcement_enabled', '1') === '1' ||
+        getSetting('announcement_enabled', '1') === 'true') &&
+      !isAnnouncementExpired,
     text: getSetting('announcement_text', 'Offre spéciale : -20% sur une sélection de montures'),
     cta: getSetting('announcement_cta', 'Découvrir'),
     link: getSetting('announcement_link', '/catalogue'),
     bgColor: getSetting('announcement_bg_color', '#35483B'),
     textColor: getSetting('announcement_text_color', '#FAFAF8'),
+    expiresAt: announcementExpiresAt || undefined,
   };
 
   const contactInfo = {
@@ -82,6 +98,44 @@ export const SettingsProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     facebookUrl: getSetting('facebook_url', 'https://facebook.com/optiquetorena'),
   };
 
+  const branding = {
+    shopName: getSetting('shop_name', 'Optique Torena'),
+    shopTagline: getSetting('shop_tagline', 'Haute Lunetterie & Optique de Précision'),
+    shopLogo: getSetting('shop_logo', ''),
+    shopFavicon: getSetting('shop_favicon', ''),
+  };
+
+  // Synchronize document SEO title, description and favicon
+  useEffect(() => {
+    const defaultTitle =
+      currentLang === 'ar'
+        ? 'أوبتيك تورينا | نظارات طبية، شمسية وبصريات دقيقة بالمغرب'
+        : 'Optique Torena | Lunettes de Vue, Solaires & Optique de Précision au Maroc';
+    const seoTitle = getSetting('seo_title', defaultTitle);
+
+    const defaultDesc =
+      currentLang === 'ar'
+        ? 'أوبتيك تورينا : أخصائي البصريات الموثوق بالدار البيضاء. استكشفوا تشكيلاتنا الحصرية من النظارات الطبية والشمسية مع استشارات متخصصة.'
+        : 'Optique Torena : Votre opticien de confiance à Casablanca. Découvrez nos collections exclusives de lunettes de vue et solaires avec conseil personnalisé et verres haute précision.';
+    const seoDescription = getSetting('seo_description', defaultDesc);
+
+    if (seoTitle) {
+      document.title = seoTitle;
+    }
+
+    const metaDesc = document.querySelector('meta[name="description"]');
+    if (metaDesc && seoDescription) {
+      metaDesc.setAttribute('content', seoDescription);
+    }
+
+    if (branding.shopFavicon) {
+      const iconLink = document.querySelector('link[rel="icon"]') as HTMLLinkElement;
+      if (iconLink) {
+        iconLink.href = branding.shopFavicon;
+      }
+    }
+  }, [settings, currentLang, branding.shopFavicon]);
+
   return (
     <SettingsContext.Provider
       value={{
@@ -90,6 +144,7 @@ export const SettingsProvider: React.FC<{ children: React.ReactNode }> = ({ chil
         getSetting,
         announcement,
         contactInfo,
+        branding,
         reloadSettings: fetchSettings,
       }}
     >
