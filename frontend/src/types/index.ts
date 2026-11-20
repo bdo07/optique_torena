@@ -141,4 +141,5 @@ export interface CatalogFilters {
   search?: string;
   sort?: 'price_asc' | 'price_desc' | 'newest' | 'featured';
   page?: number;
+  per_page?: number;
 }
