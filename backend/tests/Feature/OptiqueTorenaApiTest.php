@@ -138,8 +138,14 @@ class OptiqueTorenaApiTest extends TestCase
             'category_id' => $category->id,
             'brand_id' => $brand->id,
             'gender' => 'unisexe',
-            'frame_shape' => 'rond',
+            'frame_shape' => 'pantoo',
             'colors' => ['Noir', 'Doré'],
+            'specifications' => [
+                'material' => 'Acétate & Titane',
+                'lens' => 'Anti-reflet',
+                'dimensions' => '50 □ 20 - 145 mm',
+                'origin' => 'Italie',
+            ],
             'description_fr' => 'Description test',
             'description_ar' => 'وصف تجريبي',
             'is_available' => true,
@@ -153,6 +159,155 @@ class OptiqueTorenaApiTest extends TestCase
         $this->assertDatabaseHas('products', [
             'reference' => 'TEST-9999',
             'price' => 1950.00,
+            'frame_shape' => 'pantoo',
         ]);
+        $productId = $response->json('product.id');
+
+        // Test Update
+        $updateResp = $this->withHeaders([
+            'Authorization' => "Bearer {$token}",
+        ])->putJson("/api/admin/products/{$productId}", [
+            'name_fr' => 'Test Monture Luxe Modifiée',
+            'name_ar' => 'إطار فاخر معدل',
+            'reference' => 'TEST-9999',
+            'price' => 1850.00,
+            'category_id' => $category->id,
+            'brand_id' => $brand->id,
+            'gender' => 'homme',
+            'frame_shape' => 'pantoo',
+            'colors' => ['Noir'],
+            'is_available' => true,
+        ]);
+        $updateResp->assertStatus(200);
+        $this->assertDatabaseHas('products', [
+            'id' => $productId,
+            'name_fr' => 'Test Monture Luxe Modifiée',
+            'price' => 1850.00,
+        ]);
+
+        // Test Delete (clean-up)
+        $deleteResp = $this->withHeaders([
+            'Authorization' => "Bearer {$token}",
+        ])->deleteJson("/api/admin/products/{$productId}");
+        $deleteResp->assertStatus(200);
+        $this->assertDatabaseMissing('products', ['id' => $productId]);
+    }
+
+    public function test_admin_category_and_brand_crud(): void
+    {
+        $admin = User::where('is_admin', true)->first();
+        $token = $admin->createToken('test-token')->plainTextToken;
+
+        // Category CRUD
+        $catResp = $this->withHeaders(['Authorization' => "Bearer {$token}"])
+            ->postJson('/api/admin/categories', [
+                'name_fr' => 'Catégorie Test',
+                'name_ar' => 'فئة تجريبية',
+                'description_fr' => 'Test desc',
+                'is_active' => true,
+            ]);
+        $catResp->assertStatus(201);
+        $catId = $catResp->json('category.id');
+
+        $this->withHeaders(['Authorization' => "Bearer {$token}"])
+            ->deleteJson("/api/admin/categories/{$catId}")
+            ->assertStatus(200);
+
+        // Brand CRUD
+        $brandResp = $this->withHeaders(['Authorization' => "Bearer {$token}"])
+            ->postJson('/api/admin/brands', [
+                'name' => 'Brand Test Torena',
+                'is_active' => true,
+            ]);
+        $brandResp->assertStatus(201);
+        $brandId = $brandResp->json('brand.id');
+
+        $this->withHeaders(['Authorization' => "Bearer {$token}"])
+            ->deleteJson("/api/admin/brands/{$brandId}")
+            ->assertStatus(200);
+    }
+
+    public function test_admin_promotions_crud_and_toggle(): void
+    {
+        $admin = User::where('is_admin', true)->first();
+        $token = $admin->createToken('test-token')->plainTextToken;
+
+        $promoResp = $this->withHeaders(['Authorization' => "Bearer {$token}"])
+            ->postJson('/api/admin/promotions', [
+                'title_fr' => 'Promo Ete Torena',
+                'title_ar' => 'عرض الصيف تورينار',
+                'discount_percentage' => 30,
+                'promotional_price' => 890.00,
+                'start_date' => '2026-06-01',
+                'end_date' => '2026-08-31',
+                'is_active' => true,
+            ]);
+        $promoResp->assertStatus(201);
+        $promoId = $promoResp->json('promotion.id');
+
+        // Toggle
+        $toggleResp = $this->withHeaders(['Authorization' => "Bearer {$token}"])
+            ->patchJson("/api/admin/promotions/{$promoId}/toggle");
+        $toggleResp->assertStatus(200);
+
+        // Delete clean-up
+        $this->withHeaders(['Authorization' => "Bearer {$token}"])
+            ->deleteJson("/api/admin/promotions/{$promoId}")
+            ->assertStatus(200);
+    }
+
+    public function test_admin_settings_update_and_public_reflection(): void
+    {
+        $admin = User::where('is_admin', true)->first();
+        $token = $admin->createToken('test-token')->plainTextToken;
+
+        $updResp = $this->withHeaders(['Authorization' => "Bearer {$token}"])
+            ->postJson('/api/admin/settings', [
+                'settings' => [
+                    'announcement_text' => [
+                        'value_fr' => 'Nouvelle collection Torena 2026 disponible',
+                        'value_ar' => 'تشكيلة جديدة تورينا 2026 متوفرة الآن',
+                    ],
+                    'phone' => [
+                        'value_fr' => '+212 5 22 11 22 33',
+                        'value_ar' => '+212 5 22 11 22 33',
+                    ],
+                ],
+            ]);
+        $updResp->assertStatus(200);
+
+        // Verify public API returns new values
+        $pubResp = $this->getJson('/api/settings');
+        $pubResp->assertStatus(200);
+        $this->assertEquals('Nouvelle collection Torena 2026 disponible', $pubResp->json('announcement_text.value_fr'));
+        $this->assertEquals('+212 5 22 11 22 33', $pubResp->json('phone.value_fr'));
+    }
+
+    public function test_admin_logout_revokes_token(): void
+    {
+        $loginResp = $this->postJson('/api/admin/login', [
+            'email' => 'admin@optiquetorena.ma',
+            'password' => 'TorenaAdmin2026!',
+        ]);
+        $token = $loginResp->json('token');
+
+        // Verify valid
+        $this->withHeaders(['Authorization' => "Bearer {$token}"])
+            ->getJson('/api/admin/stats')
+            ->assertStatus(200);
+
+        // Logout
+        $logoutResp = $this->withHeaders(['Authorization' => "Bearer {$token}"])
+            ->postJson('/api/admin/logout');
+        $logoutResp->assertStatus(200);
+
+        // Flush guard caches to verify token revocation
+        $this->app['auth']->forgetGuards();
+        \Illuminate\Support\Facades\Auth::forgetGuards();
+
+        // Verify revoked
+        $this->withHeaders(['Authorization' => "Bearer {$token}"])
+            ->getJson('/api/admin/stats')
+            ->assertStatus(401);
     }
 }

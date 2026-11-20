@@ -74,7 +74,7 @@ Route::middleware('auth:sanctum')->prefix('admin')->group(function () {
     Route::get('/promotions/{id}', [PromotionController::class, 'show']);
     Route::post('/promotions/{id}', [PromotionController::class, 'update']);
     Route::put('/promotions/{id}', [PromotionController::class, 'update']);
-    Route::put('/promotions/{id}/toggle', [PromotionController::class, 'toggle']);
+    Route::match(['put', 'patch'], '/promotions/{id}/toggle', [PromotionController::class, 'toggle']);
     Route::delete('/promotions/{id}', [PromotionController::class, 'destroy']);
 
     // Website Settings
