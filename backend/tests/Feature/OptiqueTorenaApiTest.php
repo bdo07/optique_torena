@@ -12,6 +12,8 @@ use Tests\TestCase;
 
 class OptiqueTorenaApiTest extends TestCase
 {
+    use RefreshDatabase;
+
     protected function setUp(): void
     {
         parent::setUp();
